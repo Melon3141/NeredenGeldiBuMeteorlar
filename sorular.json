@@ -1,0 +1,42 @@
+[
+  {
+	"soru": "Güneş Sistemi'nde sekiz gezegen bulunur.",
+	"dogru_mu": true
+  },
+  {
+	"soru": "Ay, bir gezegendir.",
+	"dogru_mu": false
+  },
+  {
+	"soru": "Venüs, Güneş'e en yakın gezegendir.",
+	"dogru_mu": false
+  },
+  {
+	"soru": "Jüpiter, Güneş Sistemi'ndeki en büyük gezegendir.",
+	"dogru_mu": true
+  },
+  {
+	"soru": "Mars, kırmızı gezegen olarak da bilinir.",
+	"dogru_mu": true
+  },
+  {
+	"soru": "Göktaşları yalnızca Güneş'te bulunur.",
+	"dogru_mu": false
+  },
+  {
+	"soru": "Takımyıldızlar, gökyüzündeki yıldızların oluşturduğu şekillerdir.",
+	"dogru_mu": true
+  },
+  {
+	"soru": "Uzay araştırmalarında kullanılan araçlardan biri de uydulardır.",
+	"dogru_mu": true
+  },
+  {
+	"soru": "Dünya, Güneş etrafında 365 günde bir döner.",
+	"dogru_mu": true
+  },
+  {
+	"soru": "Teleskop, uzaya seyahat etmek için kullanılan bir uzay aracıdır.",
+	"dogru_mu": false
+  }
+]

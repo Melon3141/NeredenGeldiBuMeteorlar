@@ -1,0 +1,49 @@
+[gd_scene load_steps=3 format=3 uid="uid://cjt4bo5dfx0b2"]
+
+[ext_resource type="Script" uid="uid://bi778rthog0pr" path="res://soru.gd" id="1_1sutn"]
+[ext_resource type="Texture2D" uid="uid://djyqy7u0yp2dl" path="res://resimler/soru-tablosu.png" id="1_4qtxg"]
+
+[node name="Node2D" type="Node2D"]
+process_mode = 3
+z_index = 4096
+script = ExtResource("1_1sutn")
+
+[node name="Soru-tablosu" type="Sprite2D" parent="."]
+process_mode = 3
+z_index = 2018
+position = Vector2(570, 442)
+scale = Vector2(13.1524, 13.1524)
+texture = ExtResource("1_4qtxg")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+process_mode = 3
+modulate = Color(0, 0, 0, 1)
+z_index = 2018
+offset_left = 331.0
+offset_top = 163.0
+offset_right = 604.0
+offset_bottom = 258.0
+scale = Vector2(1.6, 1.6)
+text = "Skibidi"
+
+[node name="ColorRect" type="ColorRect" parent="."]
+process_mode = 3
+z_index = -50
+offset_right = 1157.0
+offset_bottom = 656.0
+color = Color(0, 0, 0, 0.411765)
+
+[node name="Doğru" type="TextureButton" parent="."]
+offset_left = 386.0
+offset_top = 430.0
+offset_right = 527.0
+offset_bottom = 545.0
+
+[node name="Yanlış" type="TextureButton" parent="."]
+offset_left = 614.0
+offset_top = 430.0
+offset_right = 719.0
+offset_bottom = 545.0
+
+[connection signal="pressed" from="Doğru" to="." method="_on_doğru_pressed"]
+[connection signal="pressed" from="Yanlış" to="." method="_on_yanlış_pressed"]

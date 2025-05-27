@@ -1,0 +1,66 @@
+[gd_scene load_steps=4 format=3 uid="uid://765xxy8gbaw2"]
+
+[ext_resource type="PackedScene" uid="uid://wny2d8dvp3ok" path="res://addons/maaacks_menus_template/base/scenes/overlaid_menu/overlaid_menu.tscn" id="1_05uyy"]
+[ext_resource type="Script" uid="uid://uidwhqh4fyhj" path="res://addons/maaacks_menus_template/base/scenes/overlaid_menu/menus/pause_menu.gd" id="2_p81d2"]
+[ext_resource type="PackedScene" uid="uid://cikf3o5omnunl" path="res://addons/maaacks_menus_template/base/scenes/overlaid_menu/menus/mini_options_overlaid_menu.tscn" id="3_2nc7s"]
+
+[node name="PauseMenu" instance=ExtResource("1_05uyy")]
+process_mode = 3
+z_index = 1000
+script = ExtResource("2_p81d2")
+options_packed_scene = ExtResource("3_2nc7s")
+main_menu_scene = "res://addons/maaacks_menus_template/base/scenes/menus/main_menu/main_menu.tscn"
+pauses_game = true
+
+[node name="MarginContainer" parent="MenuPanelContainer" index="0"]
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_right = 64
+
+[node name="TitleLabel" parent="MenuPanelContainer/MarginContainer/BoxContainer/TitleMargin" index="0"]
+text = "Durduruldu"
+
+[node name="MenuButtonsMargin" parent="MenuPanelContainer/MarginContainer/BoxContainer" index="2"]
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="CloseButton" parent="MenuPanelContainer/MarginContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="0"]
+text = "Devam Et"
+
+[node name="RestartButton" type="Button" parent="MenuPanelContainer/MarginContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="1"]
+layout_mode = 2
+text = "Yeniden Başla"
+
+[node name="MainMenuButton" type="Button" parent="MenuPanelContainer/MarginContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Ana Menü"
+
+[node name="ExitButton" type="Button" parent="MenuPanelContainer/MarginContainer/BoxContainer/MenuButtonsMargin/MenuButtons" index="3"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Oyundan Çık"
+
+[node name="ConfirmRestart" type="ConfirmationDialog" parent="." index="2"]
+unique_name_in_owner = true
+auto_translate_mode = 1
+title = "Yeniden Başla"
+dialog_text = "Emin misin?"
+
+[node name="ConfirmMainMenu" type="ConfirmationDialog" parent="." index="3"]
+unique_name_in_owner = true
+auto_translate_mode = 1
+title = "Ana Menüye Dön"
+dialog_text = "Emin misin?"
+
+[node name="ConfirmExit" type="ConfirmationDialog" parent="." index="4"]
+unique_name_in_owner = true
+auto_translate_mode = 1
+title = "Oyundan Çıkış"
+dialog_text = "Emin misin?"
+
+[connection signal="pressed" from="MenuPanelContainer/MarginContainer/BoxContainer/MenuButtonsMargin/MenuButtons/RestartButton" to="." method="_on_restart_button_pressed"]
+[connection signal="pressed" from="MenuPanelContainer/MarginContainer/BoxContainer/MenuButtonsMargin/MenuButtons/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
+[connection signal="pressed" from="MenuPanelContainer/MarginContainer/BoxContainer/MenuButtonsMargin/MenuButtons/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="confirmed" from="ConfirmRestart" to="." method="_on_confirm_restart_confirmed"]
+[connection signal="confirmed" from="ConfirmMainMenu" to="." method="_on_confirm_main_menu_confirmed"]
+[connection signal="confirmed" from="ConfirmExit" to="." method="_on_confirm_exit_confirmed"]

@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://cq40je357wo8x"]
+
+[ext_resource type="Texture2D" uid="uid://cifu2desqvwn1" path="res://resimler/ek-yakıt.png" id="1_ak1ir"]
+[ext_resource type="Script" uid="uid://c5s486ecdhw0l" path="res://soru_drop.gd" id="1_tluea"]
+
+[node name="Soru Drop" type="Node2D"]
+z_index = 810
+script = ExtResource("1_tluea")
+
+[node name="Button" type="Button" parent="."]
+offset_left = -69.0
+offset_top = -66.0
+offset_right = -25.0
+offset_bottom = -43.0
+scale = Vector2(4.34783, 4.34783)
+flat = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(20, 18)
+scale = Vector2(8, 8)
+texture = ExtResource("1_ak1ir")
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

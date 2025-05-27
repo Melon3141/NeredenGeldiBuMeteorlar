@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b3l5achydvdpm"
+path="res://.godot/imported/Undertale - Hopes and Dreams [5th Anniversary Remix] [gcLk8lEYOOM].mp3-365fda0ae2b642efde9daaa684ba5d40.mp3str"
+
+[deps]
+
+source_file="res://resimler/Undertale - Hopes and Dreams [5th Anniversary Remix] [gcLk8lEYOOM].mp3"
+dest_files=["res://.godot/imported/Undertale - Hopes and Dreams [5th Anniversary Remix] [gcLk8lEYOOM].mp3-365fda0ae2b642efde9daaa684ba5d40.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

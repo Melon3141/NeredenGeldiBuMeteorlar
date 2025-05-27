@@ -1,0 +1,209 @@
+[gd_scene load_steps=10 format=3 uid="uid://c6k5nnpbypshi"]
+
+[ext_resource type="Script" uid="uid://bhgs1upaahk3y" path="res://addons/maaacks_menus_template/base/scenes/menus/main_menu/main_menu.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://hmx6o472ropw" path="res://addons/maaacks_menus_template/base/scenes/menus/options_menu/master_options_menu_with_tabs.tscn" id="2_qvrrd"]
+[ext_resource type="PackedScene" uid="uid://t2dui8ppm3a4" path="res://addons/maaacks_menus_template/base/scenes/credits/credits.tscn" id="3_5dhvp"]
+[ext_resource type="Script" uid="uid://1nf36h0gms3q" path="res://addons/maaacks_menus_template/base/scripts/capture_focus.gd" id="4_l1ebe"]
+[ext_resource type="PackedScene" uid="uid://bkcsjsk2ciff" path="res://addons/maaacks_menus_template/base/scenes/music_players/background_music_player.tscn" id="4_w8sbm"]
+[ext_resource type="Script" uid="uid://q82a7op6i7xu" path="res://addons/maaacks_menus_template/base/scenes/menus/main_menu/control.gd" id="4_w26no"]
+[ext_resource type="Script" uid="uid://b5oej1q4h7jvh" path="res://addons/maaacks_menus_template/base/scripts/ui_sound_controller.gd" id="6_bs342"]
+[ext_resource type="Script" uid="uid://bkwlopi4qn32o" path="res://addons/maaacks_menus_template/base/scenes/menus/main_menu/config_name_label.gd" id="7_j7612"]
+[ext_resource type="Texture2D" uid="uid://b5gylxi3qurrn" path="res://resimler/arka-planlar/background.png" id="9_w26no"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+game_scene_path = "uid://bbkxr1ufsyvn7"
+options_packed_scene = ExtResource("2_qvrrd")
+credits_packed_scene = ExtResource("3_5dhvp")
+
+[node name="Control" type="Control" parent="."]
+z_index = 100
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("4_w26no")
+
+[node name="UISoundController" type="Node" parent="Control"]
+script = ExtResource("6_bs342")
+root_path = NodePath("../..")
+
+[node name="BackgroundMusicPlayer" parent="Control" instance=ExtResource("4_w8sbm")]
+bus = &"Master"
+
+[node name="BackgroundTextureRect" type="TextureRect" parent="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MenuContainer" type="MarginContainer" parent="Control"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = 104.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleMargin" type="MarginContainer" parent="Control/MenuContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 24
+
+[node name="TitleContainer" type="Control" parent="Control/MenuContainer/TitleMargin"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="Control/MenuContainer/TitleMargin/TitleContainer"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 275.0
+offset_right = 887.0
+offset_bottom = 73.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 48
+text = "Nereden Geldi Bu Meteorlar"
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("7_j7612")
+
+[node name="SubTitleMargin" type="MarginContainer" parent="Control/MenuContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 92
+
+[node name="SubTitleContainer" type="Control" parent="Control/MenuContainer/SubTitleMargin"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SubTitleLabel" type="Label" parent="Control/MenuContainer/SubTitleMargin/SubTitleContainer"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 519.0
+offset_top = 5.0
+offset_right = 606.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 24
+text = "Fen Projesi"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MenuButtonsMargin" type="MarginContainer" parent="Control/MenuContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 136
+theme_override_constants/margin_bottom = 8
+
+[node name="MenuButtonsContainer" type="Control" parent="Control/MenuContainer/MenuButtonsMargin"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MenuButtonsBoxContainer" type="BoxContainer" parent="Control/MenuContainer/MenuButtonsMargin/MenuButtonsContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 468.0
+offset_top = 17.0
+offset_right = 596.0
+offset_bottom = 253.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.50649, 1.50649)
+size_flags_horizontal = 4
+theme_override_constants/separation = 16
+alignment = 1
+vertical = true
+script = ExtResource("4_l1ebe")
+
+[node name="NewGameButton" type="Button" parent="Control/MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Yeni Oyun"
+
+[node name="ExitButton" type="Button" parent="Control/MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Oyundan Çık"
+
+[node name="OptionsContainer" type="MarginContainer" parent="Control"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CreditsContainer" type="MarginContainer" parent="Control"]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = 24.0
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 32
+
+[node name="FlowControlContainer" type="MarginContainer" parent="Control"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="FlowControl" type="Control" parent="Control/FlowControlContainer"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BackButton" type="Button" parent="Control/FlowControlContainer/FlowControl"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -31.0
+offset_right = 45.0
+grow_vertical = 0
+text = "Back"
+
+[node name="Camera2D" type="Camera2D" parent="Control"]
+position = Vector2(581, 323)
+
+[node name="Arkaplan" type="Parallax2D" parent="."]
+repeat_size = Vector2(0, 256)
+repeat_times = 12
+
+[node name="Sprite2D" type="Sprite2D" parent="Arkaplan"]
+texture_repeat = 2
+position = Vector2(576, 327)
+scale = Vector2(4, 4)
+texture = ExtResource("9_w26no")
+region_enabled = true
+region_rect = Rect2(0, 0, 384, 256)
+
+[connection signal="pressed" from="Control/MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/NewGameButton" to="." method="_on_new_game_button_pressed"]
+[connection signal="pressed" from="Control/MenuContainer/MenuButtonsMargin/MenuButtonsContainer/MenuButtonsBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="Control/FlowControlContainer/FlowControl/BackButton" to="." method="_on_back_button_pressed"]

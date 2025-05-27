@@ -1,0 +1,566 @@
+[gd_scene load_steps=35 format=3 uid="uid://bbkxr1ufsyvn7"]
+
+[ext_resource type="Texture2D" uid="uid://b5gylxi3qurrn" path="res://resimler/arka-planlar/background.png" id="1_2lw7e"]
+[ext_resource type="Script" uid="uid://cdv7cakxvcumc" path="res://oyun.gd" id="1_ka572"]
+[ext_resource type="Script" uid="uid://cak8ppix53hu3" path="res://player.gd" id="2_4hrjw"]
+[ext_resource type="Script" uid="uid://bke3brodvj2ex" path="res://character_body_2d.gd" id="2_cnnjj"]
+[ext_resource type="Texture2D" uid="uid://blbis3mhiwhph" path="res://resimler/mekik-sürüş.png" id="2_j06mm"]
+[ext_resource type="Script" uid="uid://drlf3fhi6mcek" path="res://camera_2d.gd" id="6_f6g8a"]
+[ext_resource type="Texture2D" uid="uid://cu7rpm7qtblh6" path="res://resimler/patlama.png" id="6_u2omv"]
+[ext_resource type="Script" uid="uid://ijuqqw0c4yl4" path="res://label.gd" id="8_ka572"]
+[ext_resource type="Texture2D" uid="uid://b7mdqs2qdfkpx" path="res://resimler/renkler/yellow.png" id="9_p8mkq"]
+[ext_resource type="Texture2D" uid="uid://dq74o4gk7tr6f" path="res://resimler/yakıt-gosterge.png" id="10_0o567"]
+[ext_resource type="Script" uid="uid://7rq7nlihe6ak" path="res://texture_progress_bar.gd" id="10_bbh6r"]
+[ext_resource type="Script" uid="uid://coc862ydp6feo" path="res://hareket.gd" id="11_0o567"]
+[ext_resource type="Texture2D" uid="uid://ctcd5yxi1ow46" path="res://resimler/ok.png" id="12_bbh6r"]
+[ext_resource type="Script" uid="uid://bmrxd66j2tu58" path="res://kasetçalar.gd" id="12_toqho"]
+[ext_resource type="Texture2D" uid="uid://bab2an1ymo4rm" path="res://kasetçalar.png" id="13_q3mrl"]
+[ext_resource type="Texture2D" uid="uid://c0muet3h3xwcv" path="res://resimler/pixil-frame-0.png" id="14_bbh6r"]
+[ext_resource type="AudioStream" uid="uid://jnk2xn5hlck8" path="res://sfx/finale.mp3" id="14_toqho"]
+[ext_resource type="Texture2D" uid="uid://b4m0yh3ltiw3y" path="res://resimler/gui/durdur.png" id="15_t4rom"]
+
+[sub_resource type="GDScript" id="GDScript_mdfpa"]
+script/source = "@tool
+extends Control
+
+@export var menu_path : String
+@export var pauses_game : bool = false :
+	set(value):
+		pauses_game = value
+		if pauses_game:
+			process_mode = PROCESS_MODE_ALWAYS
+		else:
+			process_mode = PROCESS_MODE_INHERIT
+@export var makes_mouse_visible : bool = true
+
+var _initial_pause_state : bool = false
+var _initial_focus_mode : FocusMode = FOCUS_ALL
+var _initial_mouse_mode : Input.MouseMode
+var _initial_focus_control
+var _scene_tree : SceneTree 
+
+func close() -> void:
+	_scene_tree.paused = _initial_pause_state
+	Input.set_mouse_mode(_initial_mouse_mode)
+	if is_instance_valid(_initial_focus_control) and _initial_focus_control.is_inside_tree():
+		_initial_focus_control.focus_mode = _initial_focus_mode
+		_initial_focus_control.grab_focus()
+	get_parent().remove_child($\".\")
+
+func _handle_cancel_input() -> void:
+	close()
+
+func _unhandled_input(event : InputEvent) -> void:
+	if event.is_action_pressed(\"ui_cancel\"):
+		_handle_cancel_input()
+
+func _enter_tree() -> void:
+	_scene_tree = get_tree()
+	_initial_pause_state = _scene_tree.paused
+	_initial_mouse_mode = Input.get_mouse_mode()
+	_initial_focus_control = get_viewport().gui_get_focus_owner()
+	if _initial_focus_control:
+		_initial_focus_mode = _initial_focus_control.focus_mode
+	if Engine.is_editor_hint(): return
+	_scene_tree.paused = pauses_game or _initial_pause_state
+	if makes_mouse_visible:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+
+func _on_restart_button_pressed() -> void:
+	SceneLoader.reload_current_scene()
+	close()
+	pass # Replace with function body.
+
+
+func _on_menu_button_pressed() -> void:
+	SceneLoader.load_scene(menu_path)
+	close()
+	pass # Replace with function body.
+"
+
+[sub_resource type="GDScript" id="GDScript_8qtwp"]
+script/source = "extends Control
+## Node that captures UI focus for games with a hidden mouse or joypad enabled.
+##
+## This script assists with capturing UI focus when
+## opening, closing, or switching between menus.
+## When attached to a node, it will check if it was changed to visible
+## and if it should grab focus. If both are true, it will capture focus
+## on the first eligible node in its scene tree.
+
+## Hierarchical depth to search in the scene tree.
+@export var search_depth : int = 1
+@export var enabled : bool = false
+@export var null_focus_enabled : bool = true
+@export var joypad_enabled : bool = true
+@export var mouse_hidden_enabled : bool = true
+
+## Locks focus
+@export var lock : bool = false :
+	set(value):
+		var value_changed : bool = lock != value
+		lock = value
+		if value_changed and not lock:
+			update_focus()
+
+func _focus_first_search(control_node : Control, levels : int = 1) -> bool:
+	if control_node == null or !control_node.is_visible_in_tree():
+		return false
+	if control_node.focus_mode == FOCUS_ALL:
+		control_node.grab_focus()
+		if control_node is ItemList:
+			control_node.select(0)
+		return true
+	if levels < 1:
+		return false
+	var children = control_node.get_children()
+	for child in children:
+		if _focus_first_search(child, levels - 1):
+			return true
+	return false
+
+func focus_first() -> void:
+	_focus_first_search(self, search_depth)
+
+func update_focus() -> void:
+	if lock : return
+	if _is_visible_and_should_capture():
+		focus_first()
+
+func _should_capture_focus() -> bool:
+	return enabled or \\
+	(get_viewport().gui_get_focus_owner() == null and null_focus_enabled) or \\
+	(Input.get_connected_joypads().size() > 0 and joypad_enabled) or \\
+	(Input.mouse_mode not in [Input.MOUSE_MODE_VISIBLE, Input.MOUSE_MODE_CONFINED] and mouse_hidden_enabled)
+
+func _is_visible_and_should_capture() -> bool:
+	return is_visible_in_tree() and _should_capture_focus()
+
+func _on_visibility_changed() -> void:
+	call_deferred(\"update_focus\")
+
+func _ready() -> void:
+	if is_inside_tree():
+		update_focus()
+		connect(\"visibility_changed\", _on_visibility_changed)
+"
+
+[sub_resource type="PackedScene" id="PackedScene_bbh6r"]
+_bundled = {
+"conn_count": 2,
+"conns": PackedInt32Array(11, 0, 55, 54, 2, 0, 0, 12, 0, 55, 56, 2, 0, 0),
+"editable_instances": [],
+"names": PackedStringArray("OverlaidMenu", "process_mode", "z_index", "layout_mode", "anchors_preset", "anchor_right", "anchor_bottom", "grow_horizontal", "grow_vertical", "script", "menu_path", "pauses_game", "Control", "BackgroundColor", "mouse_filter", "color", "ColorRect", "MenuPanelContainer", "unique_name_in_owner", "anchor_left", "anchor_top", "offset_left", "offset_top", "offset_right", "offset_bottom", "PanelContainer", "MarginContainer", "theme_override_constants/margin_left", "theme_override_constants/margin_top", "theme_override_constants/margin_right", "theme_override_constants/margin_bottom", "BoxContainer", "vertical", "TitleMargin", "TitleLabel", "theme_override_font_sizes/font_size", "text", "horizontal_alignment", "Label", "DescriptionMargin", "visible", "size_flags_vertical", "DescriptionLabel", "bbcode_enabled", "RichTextLabel", "MenuButtonsMargin", "MenuButtons", "custom_minimum_size", "size_flags_horizontal", "theme_override_constants/separation", "alignment", "RestartButton", "Button", "MenuButton", "_on_restart_button_pressed", "pressed", "_on_menu_button_pressed"),
+"node_count": 13,
+"node_paths": [],
+"nodes": PackedInt32Array(-1, -1, 12, 0, -1, 11, 1, 0, 2, 1, 3, 0, 4, 2, 5, 3, 6, 3, 7, 4, 8, 4, 9, 5, 10, 6, 11, 7, 0, 0, 0, 16, 13, -1, 8, 3, 8, 4, 2, 5, 3, 6, 3, 7, 4, 8, 4, 14, 4, 15, 9, 0, 0, 0, 25, 17, -1, 14, 18, 7, 1, 0, 3, 8, 4, 10, 19, 11, 20, 11, 5, 11, 6, 11, 21, 12, 22, 12, 23, 13, 24, 13, 7, 4, 8, 4, 0, 2, 0, 26, 26, -1, 5, 3, 4, 27, 14, 28, 14, 29, 14, 30, 14, 0, 3, 0, 31, 31, -1, 2, 3, 4, 32, 7, 0, 4, 0, 26, 33, -1, 1, 3, 4, 0, 5, 0, 38, 34, -1, 4, 3, 4, 35, 15, 36, 16, 37, 8, 0, 4, 0, 26, 39, -1, 3, 40, 17, 3, 4, 41, 0, 0, 7, 0, 44, 42, -1, 2, 3, 4, 43, 7, 0, 4, 0, 26, 45, -1, 1, 3, 4, 0, 9, 0, 31, 46, -1, 9, 18, 7, 47, 18, 3, 4, 48, 19, 41, 0, 49, 14, 50, 8, 32, 7, 9, 20, 0, 10, 0, 52, 51, -1, 2, 3, 4, 36, 21, 0, 10, 0, 52, 53, -1, 2, 3, 4, 36, 22, 0),
+"variants": [3, 510, 15, 1.0, 2, SubResource("GDScript_mdfpa"), "res://main_menu.tscn", true, 1, Color(0, 0, 0, 0.12549), 8, 0.5, -16.0, 16.0, 16, 24, "Öldün", false, Vector2(128, 0), 4, SubResource("GDScript_8qtwp"), "Yeniden Başla", "Menüye Dön"],
+"version": 3
+}
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_f6g8a"]
+size = Vector2(85, 118)
+
+[sub_resource type="Animation" id="Animation_u2omv"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Patlama:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_t4rom"]
+resource_name = "default"
+length = 0.4
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3]
+}
+
+[sub_resource type="Animation" id="Animation_toqho"]
+resource_name = "patlama"
+length = 0.8
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Patlama:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_krfxd"]
+_data = {
+&"RESET": SubResource("Animation_u2omv"),
+&"default": SubResource("Animation_t4rom"),
+&"patlama": SubResource("Animation_toqho")
+}
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g0sbc"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.428961, 0.730226, 0.50528, 1)
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.298858, 0.546296, 0.363635, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_krvwn"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.298858, 0.546296, 0.363635, 1)
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.234842, 0.443383, 0.289887, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gfyr3"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.234842, 0.443383, 0.289887, 1)
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.234842, 0.443383, 0.289887, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tytr8"]
+bg_color = Color(0.191138, 0.370484, 0.238651, 1)
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.115392, 0.241196, 0.148848, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wsakr"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.428961, 0.730226, 0.50528, 1)
+border_width_right = 2
+border_color = Color(0.298858, 0.546296, 0.363635, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1ngrn"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.298858, 0.546296, 0.363635, 1)
+border_width_right = 2
+border_color = Color(0.234842, 0.443383, 0.289887, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q0g5m"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.234842, 0.443383, 0.289887, 1)
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.234842, 0.443383, 0.289887, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+
+[sub_resource type="Theme" id="Theme_woc0u"]
+Button/styles/hover = SubResource("StyleBoxFlat_g0sbc")
+Button/styles/normal = SubResource("StyleBoxFlat_krvwn")
+Button/styles/pressed = SubResource("StyleBoxFlat_gfyr3")
+Panel/styles/panel = SubResource("StyleBoxFlat_tytr8")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_tytr8")
+TabContainer/styles/panel = SubResource("StyleBoxFlat_tytr8")
+TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_wsakr")
+TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_1ngrn")
+TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_q0g5m")
+
+[node name="Node2D" type="Node2D"]
+process_mode = 1
+script = ExtResource("1_ka572")
+
+[node name="Arkaplan" type="Parallax2D" parent="."]
+repeat_size = Vector2(0, 256)
+repeat_times = 12
+
+[node name="Sprite2D" type="Sprite2D" parent="Arkaplan"]
+z_index = -4096
+texture_repeat = 2
+position = Vector2(576, 327)
+scale = Vector2(4, 4)
+texture = ExtResource("1_2lw7e")
+region_enabled = true
+region_rect = Rect2(0, 0, 384, 256)
+
+[node name="Oyuncu" type="Node2D" parent="."]
+script = ExtResource("2_4hrjw")
+
+[node name="Mekik" type="CharacterBody2D" parent="Oyuncu"]
+z_index = 100
+position = Vector2(587, 570)
+script = ExtResource("2_cnnjj")
+"öldün" = SubResource("PackedScene_bbh6r")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Oyuncu/Mekik"]
+position = Vector2(-8.5, 5)
+shape = SubResource("RectangleShape2D_f6g8a")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Oyuncu/Mekik"]
+libraries = {
+&"": SubResource("AnimationLibrary_krfxd")
+}
+
+[node name="Sprite2D" type="Sprite2D" parent="Oyuncu/Mekik"]
+position = Vector2(1, 11)
+scale = Vector2(2.96, 2.96)
+texture = ExtResource("2_j06mm")
+hframes = 4
+
+[node name="Patlama" type="Sprite2D" parent="Oyuncu/Mekik"]
+scale = Vector2(0.919999, 0.919999)
+texture = ExtResource("6_u2omv")
+hframes = 3
+vframes = 2
+
+[node name="Camera2D" type="Camera2D" parent="Oyuncu"]
+position = Vector2(578, 323)
+script = ExtResource("6_f6g8a")
+
+[node name="Control" type="Control" parent="Oyuncu/Camera2D"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -626.0
+offset_top = -380.0
+offset_right = 608.0
+offset_bottom = 351.0
+
+[node name="Label" type="Label" parent="Oyuncu/Camera2D/Control"]
+layout_mode = 0
+offset_left = 1083.0
+offset_top = 65.0
+offset_right = 1124.0
+offset_bottom = 94.0
+scale = Vector2(2.4807, 2.4807)
+text = "0"
+horizontal_alignment = 2
+text_direction = 3
+script = ExtResource("8_ka572")
+
+[node name="TextureProgressBar" type="TextureProgressBar" parent="Oyuncu/Camera2D/Control"]
+texture_repeat = 2
+layout_mode = 0
+offset_left = 58.0
+offset_top = 65.0
+offset_right = 98.0
+offset_bottom = 105.0
+scale = Vector2(3.72581, 1)
+value = 100.0
+nine_patch_stretch = true
+texture_progress = ExtResource("9_p8mkq")
+script = ExtResource("10_bbh6r")
+
+[node name="Sprite2D" type="Sprite2D" parent="Oyuncu/Camera2D/Control"]
+z_index = -55
+position = Vector2(144, 100)
+scale = Vector2(5.39625, 5.90625)
+texture = ExtResource("10_0o567")
+flip_h = true
+
+[node name="Hareket" type="Control" parent="Oyuncu/Camera2D"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -580.0
+offset_top = -325.0
+offset_right = 557.0
+offset_bottom = 349.0
+script = ExtResource("11_0o567")
+
+[node name="Üst" type="Button" parent="Oyuncu/Camera2D/Hareket"]
+modulate = Color(1, 1, 1, 0.498039)
+layout_mode = 0
+offset_left = 900.0
+offset_top = 324.0
+offset_right = 940.0
+offset_bottom = 364.0
+scale = Vector2(2.88, 2.88)
+theme = SubResource("Theme_woc0u")
+icon = ExtResource("12_bbh6r")
+flat = true
+
+[node name="Shield" type="Button" parent="Oyuncu/Camera2D/Hareket"]
+modulate = Color(1, 1, 1, 0.498039)
+layout_mode = 0
+offset_left = 830.0
+offset_top = 355.0
+offset_right = 870.0
+offset_bottom = 395.0
+scale = Vector2(1.487, 1.487)
+theme = SubResource("Theme_woc0u")
+icon = ExtResource("14_bbh6r")
+flat = true
+
+[node name="Alt" type="Button" parent="Oyuncu/Camera2D/Hareket"]
+modulate = Color(1, 1, 1, 0.498039)
+layout_mode = 0
+offset_left = 1015.0
+offset_top = 645.0
+offset_right = 1055.0
+offset_bottom = 685.0
+rotation = 3.14159
+scale = Vector2(2.88, 2.88)
+theme = SubResource("Theme_woc0u")
+icon = ExtResource("12_bbh6r")
+flat = true
+
+[node name="Sağ" type="Button" parent="Oyuncu/Camera2D/Hareket"]
+modulate = Color(1, 1, 1, 0.498039)
+layout_mode = 0
+offset_left = 1117.0
+offset_top = 427.0
+offset_right = 1157.0
+offset_bottom = 467.0
+rotation = 1.5708
+scale = Vector2(2.88, 2.88)
+theme = SubResource("Theme_woc0u")
+icon = ExtResource("12_bbh6r")
+flat = true
+
+[node name="Sol" type="Button" parent="Oyuncu/Camera2D/Hareket"]
+modulate = Color(1, 1, 1, 0.498039)
+layout_mode = 0
+offset_left = 798.0
+offset_top = 542.0
+offset_right = 838.0
+offset_bottom = 582.0
+rotation = -1.5708
+scale = Vector2(2.88, 2.88)
+theme = SubResource("Theme_woc0u")
+button_mask = 7
+icon = ExtResource("12_bbh6r")
+flat = true
+
+[node name="ÜstMenü" type="Control" parent="Oyuncu/Camera2D"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="TextureButton2" type="TextureButton" parent="Oyuncu/Camera2D/ÜstMenü"]
+layout_mode = 0
+offset_left = -31.0
+offset_top = -323.0
+offset_right = 1.0
+offset_bottom = -291.0
+scale = Vector2(2.96, 2.96)
+texture_normal = ExtResource("15_t4rom")
+
+[node name="Kasetçalar" type="Control" parent="Oyuncu/Camera2D"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("12_toqho")
+
+[node name="Sprite2D" type="Sprite2D" parent="Oyuncu/Camera2D/Kasetçalar"]
+position = Vector2(-477, 247)
+scale = Vector2(5.6875, 5.6875)
+texture = ExtResource("13_q3mrl")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="Oyuncu/Camera2D/Kasetçalar"]
+stream = ExtResource("14_toqho")
+volume_db = -15.0
+
+[node name="Sol" type="Button" parent="Oyuncu/Camera2D/Kasetçalar"]
+layout_mode = 0
+offset_left = -532.0
+offset_top = 252.0
+offset_right = -495.0
+offset_bottom = 291.0
+focus_mode = 0
+flat = true
+
+[node name="Sağ" type="Button" parent="Oyuncu/Camera2D/Kasetçalar"]
+layout_mode = 0
+offset_left = -458.0
+offset_top = 252.0
+offset_right = -421.0
+offset_bottom = 291.0
+flat = true
+
+[node name="Label" type="Label" parent="Oyuncu/Camera2D/Kasetçalar"]
+layout_mode = 0
+offset_left = -568.0
+offset_top = 114.0
+offset_right = -291.0
+offset_bottom = 147.0
+scale = Vector2(2.04, 2.04)
+text = "Toby Fox - Another Medium"
+
+[node name="Timer" type="Timer" parent="."]
+autostart = true
+
+[connection signal="button_down" from="Oyuncu/Camera2D/Hareket/Üst" to="Oyuncu/Camera2D/Hareket" method="_on_üst_button_down"]
+[connection signal="button_up" from="Oyuncu/Camera2D/Hareket/Üst" to="Oyuncu/Camera2D/Hareket" method="_on_üst_button_up"]
+[connection signal="button_down" from="Oyuncu/Camera2D/Hareket/Shield" to="Oyuncu/Camera2D/Control/TextureProgressBar" method="_on_shield_button_down"]
+[connection signal="button_up" from="Oyuncu/Camera2D/Hareket/Shield" to="Oyuncu/Camera2D/Control/TextureProgressBar" method="_on_shield_button_up"]
+[connection signal="button_down" from="Oyuncu/Camera2D/Hareket/Alt" to="Oyuncu/Camera2D/Hareket" method="_on_alt_button_down"]
+[connection signal="button_up" from="Oyuncu/Camera2D/Hareket/Alt" to="Oyuncu/Camera2D/Hareket" method="_on_alt_button_up"]
+[connection signal="button_down" from="Oyuncu/Camera2D/Hareket/Sağ" to="Oyuncu/Camera2D/Hareket" method="_on_sağ_button_down"]
+[connection signal="button_up" from="Oyuncu/Camera2D/Hareket/Sağ" to="Oyuncu/Camera2D/Hareket" method="_on_sağ_button_up"]
+[connection signal="button_down" from="Oyuncu/Camera2D/Hareket/Sol" to="Oyuncu/Camera2D/Hareket" method="_on_sol_button_down"]
+[connection signal="button_up" from="Oyuncu/Camera2D/Hareket/Sol" to="Oyuncu/Camera2D/Hareket" method="_on_sol_button_up"]
+[connection signal="pressed" from="Oyuncu/Camera2D/ÜstMenü/TextureButton2" to="." method="_on_texture_button_2_pressed"]
+[connection signal="pressed" from="Oyuncu/Camera2D/Kasetçalar/Sol" to="Oyuncu/Camera2D/Kasetçalar" method="_on_sol_pressed"]
+[connection signal="pressed" from="Oyuncu/Camera2D/Kasetçalar/Sağ" to="Oyuncu/Camera2D/Kasetçalar" method="_on_sağ_pressed"]
